@@ -13,7 +13,11 @@ security = TransportSecuritySettings(
     ]
 )
 
-mcp = FastMCP("exam-mcp-server")
+mcp = FastMCP(
+    "exam-mcp-server",
+    host="0.0.0.0",
+    transport_security=security,
+)
 
 
 @mcp.tool(
@@ -25,7 +29,8 @@ mcp = FastMCP("exam-mcp-server")
 )
 def solve_challenge(ctx: Context) -> str:
     """Calculate the hash from the incoming challenge header."""
-    headers = ctx.headers or {}
+    request = ctx.request_context.request
+    headers = request.headers
     challenge = headers.get("x-exam-challenge", "")
 
     if not challenge:
@@ -35,15 +40,8 @@ def solve_challenge(ctx: Context) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
 
-app = mcp.streamable_http_app(
-    transport_security=security,
-    host="0.0.0.0",
-)
+app = mcp.streamable_http_app()
 
 
 if __name__ == "__main__":
-    mcp.run(
-        transport="streamable-http",
-        transport_security=security,
-        host="0.0.0.0",
-    )
+    mcp.run(transport="streamable-http")
