@@ -43,7 +43,6 @@ class ChallengeHeaderMiddleware:
         ).decode("ascii")
 
         token = challenge_var.set(challenge)
-
         try:
             await self.app(scope, receive, send)
         finally:
@@ -58,7 +57,7 @@ class ChallengeHeaderMiddleware:
     ),
 )
 def solve_challenge() -> str:
-    """Calculate the challenge hash using the request header."""
+    """Calculate the hash from the current request's challenge."""
     challenge = challenge_var.get()
 
     if not challenge:
@@ -73,4 +72,3 @@ app = ChallengeHeaderMiddleware(mcp.streamable_http_app())
 
 if __name__ == "__main__":
     mcp.run(transport="streamable-http")
-
