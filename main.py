@@ -50,6 +50,7 @@ def solve_challenge() -> str:
     ).hexdigest()[:16]
 
 
+
 security = TransportSecuritySettings(
     allowed_hosts=[
         "mcp-challenge-server-1naf.onrender.com",
@@ -58,5 +59,7 @@ security = TransportSecuritySettings(
 )
 
 app = ChallengeHeaderMiddleware(
-    mcp.streamable_http_app(transport_security=security)
+    mcp._mcp_server.streamable_http_app(
+        transport_security=security
+    )
 )
