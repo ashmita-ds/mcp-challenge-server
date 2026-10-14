@@ -1,23 +1,44 @@
 
+import contextvars
 import hashlib
-from mcp.server.fastmcp import FastMCP, Context
+
+from mcp.server.fastmcp import FastMCP
+from starlette.types import ASGIApp, Scope, Receive, Send
+
+EMAIL = "25ds1000059@ds.study.iitm.ac.in"
+challenge_var = contextvars.ContextVar("exam_challenge", default="")
 
 mcp = FastMCP("Exam Challenge Server")
 
-EMAIL = "25ds1000059@ds.study.iitm.ac.in"
+
+class ChallengeHeaderMiddleware:
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(
+        self, scope: Scope, receive: Receive, send: Send
+    ):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        headers = dict(scope.get("headers", []))
+        challenge = headers.get(b"x-exam-challenge", b"").decode("ascii")
+        token = challenge_var.set(challenge)
+
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            challenge_var.reset(token)
 
 
 @mcp.tool()
-async def solve_challenge(ctx: Context) -> str:
-    """Solve the current exam challenge from the HTTP request headers."""
-    request = ctx.request_context.request
-    challenge = request.headers.get("x-exam-challenge", "")
-
-    result = hashlib.sha256(
+def solve_challenge() -> str:
+    """Return the hash for the challenge in this HTTP request's headers."""
+    challenge = challenge_var.get()
+    return hashlib.sha256(
         f"{challenge}:{EMAIL}".encode("utf-8")
     ).hexdigest()[:16]
 
-    return result
 
-
-app = mcp.streamable_http_app()
+app = ChallengeHeaderMiddleware(mcp.streamable_http_app())
