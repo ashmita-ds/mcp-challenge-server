@@ -42,7 +42,7 @@ class ChallengeHeaderMiddleware:
 
 @mcp.tool()
 def solve_challenge() -> str:
-    """Return the expected hash for the challenge in this request."""
+    """Return the hash for the challenge in this request."""
     challenge = challenge_var.get()
 
     return hashlib.sha256(
