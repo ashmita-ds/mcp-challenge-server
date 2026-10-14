@@ -4,7 +4,7 @@ import hashlib
 from mcp.server.fastmcp import FastMCP, Context
 from mcp.server.transport_security import TransportSecuritySettings
 
-EMAIL = "25ds1000059@ds.study-iitm.ac.in"
+EMAIL = "25ds1000059@ds.study.iitm.ac.in"
 
 security = TransportSecuritySettings(
     allowed_hosts=[
@@ -30,13 +30,14 @@ mcp = FastMCP(
 def solve_challenge(ctx: Context) -> str:
     """Calculate the hash from the incoming challenge header."""
     request = ctx.request_context.request
-    headers = request.headers
-    challenge = headers.get("x-exam-challenge", "")
+    challenge = request.headers.get("x-exam-challenge", "")
 
     if not challenge:
         raise ValueError("Missing X-Exam-Challenge header")
 
-    text = f"{challenge}:{EMAIL}"
+    normalized_email = EMAIL.strip().lower()
+    text = f"{challenge}:{normalized_email}"
+
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
 
