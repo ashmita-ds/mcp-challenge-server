@@ -60,4 +60,3 @@ security = TransportSecuritySettings(
 app = ChallengeHeaderMiddleware(
     mcp.streamable_http_app(transport_security=security)
 )
-
